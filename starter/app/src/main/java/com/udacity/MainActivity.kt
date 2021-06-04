@@ -12,6 +12,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
@@ -42,9 +43,10 @@ class MainActivity : AppCompatActivity() {
         notificationManager.cancelNotifications()
         registerReceiver(receiver, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
 
-        custom_button.setOnClickListener {
-            download()
-        }
+//        custom_button.setOnClickListener {
+//            Log.d("rebeca", "clicked on custom button")
+////            download()
+//        }
 
         createChannel(
             getString(R.string.notification_channel_id),

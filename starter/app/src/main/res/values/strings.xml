@@ -11,7 +11,7 @@
     <string name="notification_channel_name" translatable="true">Download</string>
     <string name="download_notification_channel_description">Download status reminder</string>
 
-    <string name="button_name">Click me</string>
+    <string name="button_name">Download</string>
     <string name="button_loading">We are loading </string>
     <string name="title_activity_detail">DetailActivity</string>
 </resources>
