@@ -12,13 +12,45 @@
     <com.udacity.LoadingButton
         android:id="@+id/custom_button"
         android:layout_width="0dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         android:layout_height="60dp"
         android:layout_margin="20dp"
-        app:boxBackgroundColor1="#009688"
-        app:boxBackgroundColor2="#CDDC39"
+        android:background="@color/colorPrimary"
+        app:boxLoadingColor="@color/colorPrimaryDark"
+        app:textDefault="@string/button_name"
+        app:textLoading="@string/button_loading"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintBottom_toTopOf="@+id/custom_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <RadioButton
+            android:id="@+id/radioButtonGlide"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="2"
+            android:text="@string/glide_download_option_label" />
+
+        <RadioButton
+            android:id="@+id/radioButtonLoadApp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/load_app_download_option_label" />
+
+        <RadioButton
+            android:id="@+id/radioButtonRetrofit"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/retrofit_download_option_label" />
+    </RadioGroup>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

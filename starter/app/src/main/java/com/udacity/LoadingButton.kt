@@ -1,13 +1,12 @@
 package com.udacity
 
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.Typeface
+import android.graphics.*
 import android.util.AttributeSet
 import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.withStyledAttributes
 import kotlin.properties.Delegates
@@ -24,68 +23,123 @@ class LoadingButton @JvmOverloads constructor(
     private var widthSize = 0
     private var heightSize = 0
     private var radius: Float = 0F
-    private var buttonStateLoadingColor = 0
-    private var buttonStateCompletedColor = 0
+    private var text = ""
+
     private val valueAnimator = ValueAnimator()
 
     private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Loading) { p, old, new ->
     }
 
+    //styles attributes
+    private var loadingColor = 0
+    private var defaultColor = 0
+    private var textButtonDefault = ""
+    private var textButtonLoading = ""
+
+    companion object {
+        private const val TAG = "LoadingButton"
+    }
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        isAntiAlias = true
+        isDither = true
         style = Paint.Style.FILL
         textAlign = Paint.Align.CENTER
         textSize = 55.0f
-        typeface = Typeface.create( "", Typeface.BOLD)
+        typeface = Typeface.create( "", Typeface.NORMAL)
     }
-
 
     init {
         context.withStyledAttributes(attrs, R.styleable.LoadingButton) {
-            buttonStateCompletedColor = getColor(R.styleable.LoadingButton_boxBackgroundColor1, 0)
-            buttonStateLoadingColor = getColor(R.styleable.LoadingButton_boxBackgroundColor2, 0)
+            loadingColor = getColor(R.styleable.LoadingButton_boxLoadingColor, 0)
+            textButtonDefault = getString(R.styleable.LoadingButton_textDefault).toString()
+            textButtonLoading = getString(R.styleable.LoadingButton_textLoading).toString()
         }
+        text = textButtonDefault
         isClickable = true
     }
 
-    override fun performClick(): Boolean {
-        if (super.performClick()) return true
-
-        Log.d("rebeca", "perfomr click")
-        buttonState = buttonState.next()
-
-        invalidate()
-        return true
-    }
+    //todo function that will update widthsize of a clipping region of rectangle then call invalidate
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
         radius = (min(width, height) / 2.0 * 0.8).toFloat()
     }
 
+    @SuppressLint("DrawAllocation")
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
+        //set background color
+        canvas?.drawColor(defaultColor)
         //draw background rectangle
-        paint.color = when (buttonState) {
-            ButtonState.Loading -> buttonStateLoadingColor
-            else -> buttonStateCompletedColor
-        }
-        canvas?.drawRect(0F, 0F, (width.toFloat()), (height.toFloat()), paint)
+        drawLoadingRectangle(canvas)
 
         //draw loading circle
-        //todo set background color using
-        paint.color = Color.BLUE
-        canvas?.drawCircle((width / 2).toFloat(), (height / 2).toFloat(), radius, paint)        //canvas.drawCircle()
+        drawLoadingCircle(canvas)
 
         // draw text
-        paint.color = Color.WHITE
-        val text = if (buttonState == ButtonState.Loading)
-            context.getString(R.string.button_loading)
-        else
-            context.getString(R.string.button_name)
-        canvas?.drawText(text, (width / 2).toFloat(), (height / 2).toFloat(), paint)
+        drawText(canvas)
     }
+
+    private fun drawLoadingRectangle(canvas: Canvas?) {
+        canvas?.save() //-> do it to each draw
+        paint.color = loadingColor
+        //todo how to animate rect width and loading circle sweepAngle -> seekable animation
+        canvas?.drawRect(0F, 0F, (widthSize.toFloat() / 2), (height.toFloat()), paint)
+        canvas?.restore() //to each draw
+    }
+
+    //todo set position and animate
+    private fun drawLoadingCircle(canvas: Canvas?) {
+        canvas?.save() //-> do it to each draw
+
+        paint.color = context.getColor(R.color.colorAccent)
+        canvas?.drawArc(
+            (width / 2).toFloat() - radius,
+            (height / 2).toFloat() - radius,
+            (width / 2).toFloat() + radius,
+            (height / 2).toFloat() + radius,
+            0F,
+            90F,
+            true,
+            paint)
+        canvas?.restore() //to each draw
+    }
+
+    //todo set position
+    private fun drawText(canvas: Canvas?) {
+        canvas?.save() //-> do it to each draw
+
+        //canvas.translate() // -> set position to each draw
+        paint.color = Color.WHITE
+        canvas?.drawText(text, (width / 2).toFloat(), (height / 2).toFloat(), paint)
+        canvas?.restore() //to each draw
+    }
+
+    override fun performClick(): Boolean {
+        if (super.performClick()) return true
+        Log.d("rebeca", "perfomr click")
+        updateButtonState()
+        return true
+    }
+
+    private fun updateButtonState() {
+        Log.d("rebeca", "Action up")
+        buttonState = buttonState.next()
+        text = when (buttonState) {
+            ButtonState.Loading -> {
+//                isClickable = false
+                textButtonLoading
+            }
+            else -> {
+//                isClickable = true
+                textButtonDefault
+            }
+        }
+        invalidate() // will call onDraw
+    }
+
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val minw: Int = paddingLeft + paddingRight + suggestedMinimumWidth
