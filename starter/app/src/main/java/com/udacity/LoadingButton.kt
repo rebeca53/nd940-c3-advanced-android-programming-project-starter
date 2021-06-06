@@ -1,5 +1,6 @@
 package com.udacity
 
+import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
@@ -24,9 +25,7 @@ class LoadingButton @JvmOverloads constructor(
     private var heightSize = 0
     private var radius: Float = 0F
     private var text = ""
-
-    private val valueAnimator = ValueAnimator()
-
+    private var progress = 0F
     private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Loading) { p, old, new ->
     }
 
@@ -85,8 +84,8 @@ class LoadingButton @JvmOverloads constructor(
     private fun drawLoadingRectangle(canvas: Canvas?) {
         canvas?.save() //-> do it to each draw
         paint.color = loadingColor
-        //todo how to animate rect width and loading circle sweepAngle -> seekable animation
-        canvas?.drawRect(0F, 0F, (widthSize.toFloat() / 2), (height.toFloat()), paint)
+        //todo seekable animation
+        canvas?.drawRect(0F, 0F, progress * widthSize, heightSize.toFloat(), paint)
         canvas?.restore() //to each draw
     }
 
@@ -101,7 +100,7 @@ class LoadingButton @JvmOverloads constructor(
             (width / 2).toFloat() + radius,
             (height / 2).toFloat() + radius,
             0F,
-            90F,
+            progress * 360F,
             true,
             paint)
         canvas?.restore() //to each draw
@@ -117,10 +116,20 @@ class LoadingButton @JvmOverloads constructor(
         canvas?.restore() //to each draw
     }
 
+    fun loadAnimation() {
+        val animator = ObjectAnimator.ofFloat(this, "progress", 0f, 100F)
+        animator.duration = 3000
+        animator.addUpdateListener {
+            progress = (it.animatedValue as Float) / 100F
+            invalidate()
+        }
+        animator.start()
+    }
+
     override fun performClick(): Boolean {
-        if (super.performClick()) return true
         Log.d("rebeca", "perfomr click")
-        updateButtonState()
+//        updateButtonState()
+        loadAnimation()
         return true
     }
 

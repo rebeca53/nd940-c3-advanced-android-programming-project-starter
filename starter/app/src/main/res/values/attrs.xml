@@ -4,5 +4,6 @@
         <attr name="boxLoadingColor" format="color" />
         <attr name="textDefault" format="string" />
         <attr name="textLoading" format="string" />
+        <attr name="progress" format="float" />
     </declare-styleable>
 </resources>
