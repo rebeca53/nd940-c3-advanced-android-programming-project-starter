@@ -8,14 +8,17 @@ import androidx.core.app.NotificationCompat
 
 private const val NOTIFICATION_ID = 0
 
-fun NotificationManager.sendNotification(messageBody: String, applicationContext: Context) {
+fun NotificationManager.sendNotification(messageBody: String, repositoryName: String, downloadStatus: String, applicationContext: Context) {
     val detailIntent = Intent(applicationContext, DetailActivity::class.java)
+    detailIntent.putExtra(DetailActivity.EXTRA_DOWNLOAD_STATUS, downloadStatus)
+    detailIntent.putExtra(DetailActivity.EXTRA_NAME, repositoryName)
     val detailPendingIntent = PendingIntent.getActivity(
         applicationContext,
         NOTIFICATION_ID,
         detailIntent,
         PendingIntent.FLAG_UPDATE_CURRENT
     )
+
 
     //todo customize notification style - bold title
     val style = NotificationCompat.InboxStyle()

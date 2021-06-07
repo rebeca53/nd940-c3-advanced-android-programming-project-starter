@@ -23,5 +23,9 @@
 
     <string name="button_name">Download</string>
     <string name="button_loading">We are loading </string>
+
     <string name="title_activity_detail">DetailActivity</string>
+    <string name="file_name_label">File name:</string>
+    <string name="status_label">Status:</string>
+    <string name="downloading_from_cloud">An image of a cloud and a down arrow inside it representing downloading from cloud</string>
 </resources>

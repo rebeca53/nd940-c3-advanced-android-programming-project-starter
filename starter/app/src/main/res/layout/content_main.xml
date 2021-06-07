@@ -53,4 +53,15 @@
             android:text="@string/retrofit_download_option_label" />
     </RadioGroup>
 
+    <ImageView
+        android:id="@+id/downloadImage"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/downloading_from_cloud"
+        app:layout_constraintBottom_toTopOf="@+id/radioGroup"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_download_foreground" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

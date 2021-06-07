@@ -3,7 +3,6 @@ package com.udacity
 import android.app.DownloadManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -16,23 +15,23 @@ import android.os.Environment
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
 
-
 class MainActivity : AppCompatActivity() {
     companion object {
-        private const val CHANNEL_ID = "channelId"
         private const val TAG = "MainActivity"
+        private const val DOWNLOAD_SUCCESS = "Success"
+        private const val DOWNLOAD_FAIL = "Fail"
     }
 
     private var downloadID: Long = 0
     private lateinit var url: String
+    private lateinit var name: String
+    private lateinit var status: String
     private lateinit var notificationManager: NotificationManager
-    private lateinit var pendingIntent: PendingIntent
-    private lateinit var action: NotificationCompat.Action
+    private lateinit var downloadManager: DownloadManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,31 +43,40 @@ class MainActivity : AppCompatActivity() {
                 application,
                 NotificationManager::class.java
             ) as NotificationManager
-
-        // todo call when applied
         notificationManager.cancelNotifications()
-
-        //download manager example:https://github.com/commonsguy/cw-android/blob/master/Internet/Download/src/com/commonsware/android/download/DownloadDemo.java
-        val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        intentFilter.addAction(DownloadManager.ACTION_NOTIFICATION_CLICKED)
-        registerReceiver(receiver, intentFilter)
-
-
-        custom_button.setOnClickListener {
-            Log.d("rebeca", "clicked on custom button")
-            url = when(radioGroup.checkedRadioButtonId) {
-                R.id.radioButtonGlide -> getString(R.string.glide_download_link)
-                R.id.radioButtonLoadApp -> getString(R.string.load_app_download_link)
-                R.id.radioButtonRetrofit -> getString(R.string.retrofit_download_link)
-                else -> ""
-            }
-            download()
-        }
-
         createChannel(
             getString(R.string.notification_channel_id),
             getString(R.string.notification_channel_name)
         )
+
+        //download manager example:https://github.com/commonsguy/cw-android/blob/master/Internet/Download/src/com/commonsware/android/download/DownloadDemo.java
+        downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
+        val intentFilter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
+        intentFilter.addAction(DownloadManager.ACTION_NOTIFICATION_CLICKED)
+        registerReceiver(receiver, intentFilter)
+
+        custom_button.setOnClickListener {
+            Log.d("rebeca", "clicked on custom button")
+            when(radioGroup.checkedRadioButtonId) {
+                R.id.radioButtonGlide -> {
+                    name = getString(R.string.glide_download_option_label)
+                    url = getString(R.string.glide_download_link)
+                }
+                R.id.radioButtonLoadApp -> {
+                    name = getString(R.string.load_app_download_option_label)
+                    url = getString(R.string.load_app_download_link)
+                }
+                R.id.radioButtonRetrofit -> {
+                    name = getString(R.string.retrofit_download_option_label)
+                    url = getString(R.string.retrofit_download_link)
+                }
+                else -> {
+                    name = ""
+                    url = ""
+                }
+            }
+            download()
+        }
     }
 
     override fun onDestroy() {
@@ -100,7 +108,6 @@ class MainActivity : AppCompatActivity() {
             Toast.makeText(this, R.string.toast_message_please_select_the_file_to_download, Toast.LENGTH_LONG).show()
             return
         }
-
         custom_button.loadAnimation()
         val request =
             DownloadManager.Request(Uri.parse(url))
@@ -111,9 +118,24 @@ class MainActivity : AppCompatActivity() {
                 .setAllowedOverRoaming(true)
                 .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, "master.zip")
 
-        val downloadManager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         downloadID =
             downloadManager.enqueue(request)// enqueue puts the download request in the queue.
+    }
+
+    private fun queryDownloadStatus() {
+        val cursor = downloadManager.query(DownloadManager.Query().setFilterById(downloadID))
+
+        if (cursor == null) {
+            status = DOWNLOAD_FAIL
+            return
+        }
+
+        cursor.moveToFirst()
+        val statusCode = cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))
+        status = when (statusCode) {
+            DownloadManager.STATUS_SUCCESSFUL -> DOWNLOAD_SUCCESS
+            else -> DOWNLOAD_FAIL
+        }
     }
 
     // notification methods
@@ -141,7 +163,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun notifyDownloadStatus() {
-        notificationManager.sendNotification(application.getString(R.string.notification_description), application)
+        queryDownloadStatus()
+        notificationManager.sendNotification(application.getString(R.string.notification_description), name, status, application)
     }
 
 }
