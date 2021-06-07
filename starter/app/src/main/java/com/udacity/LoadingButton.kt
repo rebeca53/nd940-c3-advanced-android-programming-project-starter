@@ -1,13 +1,12 @@
 package com.udacity
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.util.Log
-import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.withStyledAttributes
 import kotlin.properties.Delegates
@@ -24,9 +23,12 @@ class LoadingButton @JvmOverloads constructor(
     private var widthSize = 0
     private var heightSize = 0
     private var radius: Float = 0F
+    private var circleCenterX: Float = 0F
+    private var circleCenterY: Float = 0F
     private var text = ""
+    private var textBounds = Rect()
     private var progress = 0F
-    private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Loading) { p, old, new ->
+    private var buttonState: ButtonState by Delegates.observable<ButtonState>(ButtonState.Completed) { p, old, new ->
     }
 
     //styles attributes
@@ -58,11 +60,9 @@ class LoadingButton @JvmOverloads constructor(
         isClickable = true
     }
 
-    //todo function that will update widthsize of a clipping region of rectangle then call invalidate
-
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        radius = (min(width, height) / 2.0 * 0.8).toFloat()
+        radius = (min(width, height) / 2.0 * 0.5).toFloat()
     }
 
     @SuppressLint("DrawAllocation")
@@ -74,81 +74,78 @@ class LoadingButton @JvmOverloads constructor(
         //draw background rectangle
         drawLoadingRectangle(canvas)
 
-        //draw loading circle
-        drawLoadingCircle(canvas)
-
         // draw text
         drawText(canvas)
+
+        //draw loading circle
+        drawLoadingCircle(canvas)
     }
 
     private fun drawLoadingRectangle(canvas: Canvas?) {
-        canvas?.save() //-> do it to each draw
+        canvas?.save()
         paint.color = loadingColor
         //todo seekable animation
         canvas?.drawRect(0F, 0F, progress * widthSize, heightSize.toFloat(), paint)
-        canvas?.restore() //to each draw
+        canvas?.restore()
     }
 
-    //todo set position and animate
     private fun drawLoadingCircle(canvas: Canvas?) {
-        canvas?.save() //-> do it to each draw
-
+        canvas?.save()
         paint.color = context.getColor(R.color.colorAccent)
+        circleCenterX = (width / 2F) + (textBounds.width() / 2F) + radius
+        circleCenterY = (height / 2F)
         canvas?.drawArc(
-            (width / 2).toFloat() - radius,
-            (height / 2).toFloat() - radius,
-            (width / 2).toFloat() + radius,
-            (height / 2).toFloat() + radius,
+            circleCenterX - radius,
+            circleCenterY - radius,
+            circleCenterX + radius,
+            circleCenterY + radius,
             0F,
             progress * 360F,
             true,
             paint)
-        canvas?.restore() //to each draw
+        canvas?.restore()
     }
 
-    //todo set position
     private fun drawText(canvas: Canvas?) {
-        canvas?.save() //-> do it to each draw
-
-        //canvas.translate() // -> set position to each draw
+        canvas?.save()
+        text = when (buttonState) {
+            ButtonState.Loading -> textButtonLoading
+            else -> textButtonDefault
+        }
+        paint.getTextBounds(text, 0, text.length, textBounds)
         paint.color = Color.WHITE
-        canvas?.drawText(text, (width / 2).toFloat(), (height / 2).toFloat(), paint)
-        canvas?.restore() //to each draw
+        canvas?.drawText(
+            text,
+            (width / 2).toFloat() ,
+            (height / 2).toFloat() - textBounds.exactCenterY(),
+            paint)
+        canvas?.restore()
     }
 
+    @SuppressLint("ObjectAnimatorBinding")
     fun loadAnimation() {
+        buttonState = ButtonState.Loading
         val animator = ObjectAnimator.ofFloat(this, "progress", 0f, 100F)
         animator.duration = 3000
+        animator.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationStart(animation: Animator?) {
+                isEnabled = false
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                isEnabled = true
+                buttonState = ButtonState.Completed
+                progress = 0F
+                invalidate()
+            }
+        })
+
         animator.addUpdateListener {
             progress = (it.animatedValue as Float) / 100F
             invalidate()
         }
         animator.start()
     }
-
-    override fun performClick(): Boolean {
-        Log.d("rebeca", "perfomr click")
-//        updateButtonState()
-        loadAnimation()
-        return true
-    }
-
-    private fun updateButtonState() {
-        Log.d("rebeca", "Action up")
-        buttonState = buttonState.next()
-        text = when (buttonState) {
-            ButtonState.Loading -> {
-//                isClickable = false
-                textButtonLoading
-            }
-            else -> {
-//                isClickable = true
-                textButtonDefault
-            }
-        }
-        invalidate() // will call onDraw
-    }
-
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val minw: Int = paddingLeft + paddingRight + suggestedMinimumWidth

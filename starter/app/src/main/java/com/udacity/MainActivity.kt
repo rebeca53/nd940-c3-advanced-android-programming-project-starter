@@ -101,6 +101,7 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        custom_button.loadAnimation()
         val request =
             DownloadManager.Request(Uri.parse(url))
                 .setTitle(getString(R.string.app_name))
